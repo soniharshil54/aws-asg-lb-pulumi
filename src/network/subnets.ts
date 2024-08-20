@@ -1,16 +1,11 @@
 import * as aws from "@pulumi/aws";
 import { Vpc } from "@pulumi/aws/ec2";
 
-export async function createSubnets(resourceName: (baseName: string) => string, vpc: Vpc) {
-    // Get the available availability zones in the current region
-    const availabilityZones = await aws.getAvailabilityZones({
-        state: "available",
-    });
-
+export function createSubnets(resourceName: (baseName: string) => string, vpc: Vpc, availabilityZones: string[]) {
     const publicSubnet1 = new aws.ec2.Subnet(resourceName("subnet-1"), {
         vpcId: vpc.id,
         cidrBlock: "10.0.1.0/24",
-        availabilityZone: availabilityZones.names[0], // Use the first available AZ
+        availabilityZone: availabilityZones[0], // Use the first AZ from the map
         tags: {
             Name: resourceName("subnet-1"),
         },
@@ -19,7 +14,7 @@ export async function createSubnets(resourceName: (baseName: string) => string, 
     const publicSubnet2 = new aws.ec2.Subnet(resourceName("subnet-2"), {
         vpcId: vpc.id,
         cidrBlock: "10.0.2.0/24",
-        availabilityZone: availabilityZones.names[1], // Use the second available AZ
+        availabilityZone: availabilityZones[1], // Use the second AZ from the map
         tags: {
             Name: resourceName("subnet-2"),
         },
