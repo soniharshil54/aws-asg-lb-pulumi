@@ -3,12 +3,13 @@ import { Vpc } from "@pulumi/aws/ec2";
 
 export function createTargetGroup(name: string, vpc: Vpc) {
     return new aws.lb.TargetGroup(name, {
-        port: 80,
+        port: 4010,
         protocol: "HTTP",
         targetType: "instance",
         vpcId: vpc.id,
         healthCheck: {
-            path: "/",
+            path: "/v1/healthcheck",
+            port: "4010",  // Ensure the health check uses port 4010
             protocol: "HTTP",
             interval: 30,
             timeout: 5,

@@ -26,6 +26,7 @@ export function createAsg(
         instanceType: "t3.micro",
         securityGroups: [ec2SecurityGroup.id],
         iamInstanceProfile: instanceProfile.name,
+        associatePublicIpAddress: true,
         userData: `#!/bin/bash
         {
             sudo apt update -y

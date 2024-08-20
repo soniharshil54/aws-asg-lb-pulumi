@@ -34,10 +34,10 @@ const regionAzMap: { [key: string]: string[] } = {
 const availabilityZones = regionAzMap[region];
 
 // Create VPC
-const vpc = createVpc(resourceName("vpc"));
+const { vpc, routeTable } = createVpc(resourceName("vpc"));
 
 // Create Subnets
-const { publicSubnet1, publicSubnet2 } = createSubnets(resourceName, vpc, availabilityZones);
+const { publicSubnet1, publicSubnet2 } = createSubnets(resourceName, vpc, availabilityZones, routeTable);
 
 // Create Security Groups
 const { albSecurityGroup, ec2SecurityGroup } = createSecurityGroups(resourceName, vpc);

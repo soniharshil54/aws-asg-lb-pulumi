@@ -49,6 +49,12 @@ export function createCloudFrontDistribution(name: string, s3Bucket: Bucket, loa
                 viewerProtocolPolicy: "redirect-to-https",
                 allowedMethods: ["GET", "HEAD"],
                 cachedMethods: ["GET", "HEAD"],
+                forwardedValues: {
+                    queryString: false,
+                    cookies: {
+                        forward: "none",
+                    },
+                },
             },
         ],
         viewerCertificate: {

@@ -42,6 +42,20 @@ export function createSecurityGroups(resourceName: (baseName: string) => string,
                 toPort: 80,
                 securityGroups: [albSecurityGroup.id],
             },
+            {
+                protocol: "tcp",
+                fromPort: 4010,
+                toPort: 4010,
+                securityGroups: [albSecurityGroup.id],
+            },
+            {
+                protocol: "tcp",
+                fromPort: 22,
+                toPort: 22,
+                cidrBlocks: [
+                    "0.0.0.0/0"
+                ],
+            }
         ],
         egress: [
             {
