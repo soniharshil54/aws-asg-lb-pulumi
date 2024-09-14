@@ -10,6 +10,7 @@ export function createAsg(
     publicSubnet2: Subnet,
     ec2SecurityGroup: SecurityGroup,
     targetGroup: TargetGroup,
+    tcpTargetGroup: TargetGroup,
     instanceProfile: InstanceProfile
 ) {
     const ami = aws.ec2.getAmi({
@@ -51,7 +52,7 @@ export function createAsg(
         desiredCapacity: 2,
         minSize: 2,
         maxSize: 4,
-        targetGroupArns: [targetGroup.arn],
+        targetGroupArns: [targetGroup.arn, tcpTargetGroup.arn],
         tags: [
             {
                 key: "Name",

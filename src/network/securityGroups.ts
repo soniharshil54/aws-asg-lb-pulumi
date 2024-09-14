@@ -32,6 +32,37 @@ export function createSecurityGroups(resourceName: (baseName: string) => string,
         },
     });
 
+    const nlbSecurityGroup = new aws.ec2.SecurityGroup(resourceName("nlb-sg"), {
+        vpcId: vpc.id,
+        description: "Allow TCP access to NLB",
+        ingress: [
+            {
+                protocol: "tcp",
+                fromPort: 80,
+                toPort: 80,
+                cidrBlocks: ["0.0.0.0/0"],
+            },
+            {
+                protocol: "tcp",
+                fromPort: 443,
+                toPort: 443,
+                cidrBlocks: ["0.0.0.0/0"],
+            },
+        ],
+        egress: [
+            {
+                protocol: "-1",
+                fromPort: 0,
+                toPort: 0,
+                cidrBlocks: ["0.0.0.0/0"],
+            },
+        ],
+        tags: {
+            Name: resourceName("nlb-sg"),
+        },
+    });
+
+
     const ec2SecurityGroup = new aws.ec2.SecurityGroup(resourceName("ec2-sg"), {
         vpcId: vpc.id,
         description: "Allow HTTP access from ALB",
@@ -40,13 +71,13 @@ export function createSecurityGroups(resourceName: (baseName: string) => string,
                 protocol: "tcp",
                 fromPort: 80,
                 toPort: 80,
-                securityGroups: [albSecurityGroup.id],
+                securityGroups: [albSecurityGroup.id, nlbSecurityGroup.id],
             },
             {
                 protocol: "tcp",
                 fromPort: 4010,
                 toPort: 4010,
-                securityGroups: [albSecurityGroup.id],
+                securityGroups: [albSecurityGroup.id, nlbSecurityGroup.id],
             },
             {
                 protocol: "tcp",
@@ -70,5 +101,5 @@ export function createSecurityGroups(resourceName: (baseName: string) => string,
         },
     });
 
-    return { albSecurityGroup, ec2SecurityGroup };
+    return { albSecurityGroup, ec2SecurityGroup, nlbSecurityGroup };
 }

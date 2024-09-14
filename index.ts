@@ -6,8 +6,10 @@ import { createSecurityGroups } from "./src/network/securityGroups";
 import { createIamResources } from "./src/compute/instanceProfile";
 import { createAsg } from "./src/compute/asg";
 import { createLoadBalancer } from "./src/network/loadBalancer";
-import { createTargetGroup } from "./src/network/targetGroup";
+import { createTargetGroup, createTcpTargetGroup } from "./src/network/targetGroup";
 import { createListener } from "./src/network/listener";
+import { createNetworkLoadBalancer } from "./src/network/nlb";
+import { createNlbListener } from "./src/network/nlbListener";
 import { createS3Bucket } from "./src/storage/s3Bucket";
 import { createCloudFrontDistribution } from "./src/network/cloudfront";
 
@@ -16,7 +18,7 @@ const project = pulumi.getProject();
 const stack = pulumi.getStack();
 
 // Get the AWS region
-const region = aws.config.region || 'eu-west-2'; // Default to eu-west-2 if not set
+const region = 'eu-west-2'; // Default to eu-west-2 if not set
 console.log(`Region: ${region}`);
 
 // Resource name generator
@@ -40,7 +42,7 @@ const { vpc, routeTable } = createVpc(resourceName("vpc"));
 const { publicSubnet1, publicSubnet2 } = createSubnets(resourceName, vpc, availabilityZones, routeTable);
 
 // Create Security Groups
-const { albSecurityGroup, ec2SecurityGroup } = createSecurityGroups(resourceName, vpc);
+const { albSecurityGroup, ec2SecurityGroup, nlbSecurityGroup } = createSecurityGroups(resourceName, vpc);
 
 // Create IAM resources
 const instanceProfile = createIamResources(resourceName);
@@ -48,22 +50,32 @@ const instanceProfile = createIamResources(resourceName);
 // Create S3 Bucket and Origin Access Identity
 const { s3Bucket, originAccessIdentity } = createS3Bucket(resourceName("bucket"));
 
-// Create Load Balancer
+// Create Load Balancer (ALB)
 const loadBalancer = createLoadBalancer(resourceName("lb"), publicSubnet1, publicSubnet2, albSecurityGroup);
 
 // Create Target Group
 const targetGroup = createTargetGroup(resourceName("tg"), vpc);
 
-// Create Auto Scaling Group
-const asg = createAsg(resourceName, publicSubnet1, publicSubnet2, ec2SecurityGroup, targetGroup, instanceProfile);
+// Create TCP Target Group
+const tcpTargetGroup = createTcpTargetGroup("aws-asg-lb-pulumi-tcp-tg", vpc);
 
-// Create Listener for the Load Balancer
+// Create Auto Scaling Group
+const asg = createAsg(resourceName, publicSubnet1, publicSubnet2, ec2SecurityGroup, targetGroup, tcpTargetGroup, instanceProfile);
+
+// Create Listener for the ALB
 const listener = createListener(resourceName("listener"), loadBalancer, targetGroup);
+
+// Create Network Load Balancer (NLB)
+const networkLoadBalancer = createNetworkLoadBalancer(resourceName("nlb"), publicSubnet1, publicSubnet2, nlbSecurityGroup);
+
+// Create Listener for the NLB
+const nlbListener = createNlbListener(resourceName("nlb-listener"), networkLoadBalancer, tcpTargetGroup);
 
 // Create CloudFront Distribution
 const cloudfrontDistribution = createCloudFrontDistribution(resourceName("cf"), s3Bucket, loadBalancer, originAccessIdentity);
 
 // Export Outputs
 export const albDnsName = loadBalancer.dnsName;
+export const nlbDnsName = networkLoadBalancer.dnsName;
 export const s3BucketName = s3Bucket.bucket;
 export const cloudfrontUrl = cloudfrontDistribution.domainName;

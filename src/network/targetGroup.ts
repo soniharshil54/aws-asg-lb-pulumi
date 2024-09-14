@@ -21,3 +21,23 @@ export function createTargetGroup(name: string, vpc: Vpc) {
         },
     });
 }
+
+export function createTcpTargetGroup(name: string, vpc: Vpc) {
+    return new aws.lb.TargetGroup(name, {
+        port: 4010, // The port your application listens on
+        protocol: "TCP",
+        targetType: "instance",
+        vpcId: vpc.id,
+        healthCheck: {
+            protocol: "TCP",
+            port: "traffic-port",
+            interval: 30,
+            timeout: 5,
+            healthyThreshold: 2,
+            unhealthyThreshold: 2,
+        },
+        tags: {
+            Name: name,
+        },
+    });
+}
